@@ -75,7 +75,10 @@ class ViewManager:
                 '[window.innerHeight, document.body.scrollHeight];', callback
             )
         elif self.origBridgeCmd:
-            return self.origBridgeCmd(cmd)
+            if self.origBridgeCmd is self.storePageInfo:
+                pass
+            else:
+                return self.origBridgeCmd(cmd)
 
     def setZoom(self, factor=None):
         if factor:

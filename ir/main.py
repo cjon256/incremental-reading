@@ -150,9 +150,13 @@ class ReadingManager:
         return html
 
     def onShowAnswer(self):
-        for qs in self.qshortcuts:
-            mw.stateShortcuts.remove(qs)
-            sip.delete(qs)
+        try:
+            for qs in self.qshortcuts:
+                mw.stateShortcuts.remove(qs)
+                sip.delete(qs)
+        except ValueError:
+            # might not be in there
+            pass
 
     def onReviewCleanup(self):
         self.qshortcuts = []
