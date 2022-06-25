@@ -130,9 +130,13 @@ class Scheduler:
             else:
                 info = str(i).zfill(posWidth)
             title = sub(r'\s+', ' ', stripHTML(card['title']))
-            text = self.settings['organizerFormat'].format(
-                info=info, title=title
-            )
+            try:
+                text = self.settings['organizerFormat'].format(
+                    info=info, title=title
+                )
+            except KeyError as keyerror:
+                text = str(title)
+
             item = QListWidgetItem(text)
             item.setData(Qt.UserRole, card)
             self.cardListWidget.addItem(item)

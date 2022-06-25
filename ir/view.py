@@ -20,6 +20,8 @@ from aqt import mw
 
 from .util import isIrCard, loadFile, viewingIrText
 
+class ViewManagerException(Exception):
+    pass
 
 class ViewManager:
     viewportHeight = None
@@ -66,16 +68,20 @@ class ViewManager:
         return html
 
     def storePageInfo(self, cmd):
-        if cmd == 'store':
+        try:
+            if cmd == 'store':
 
-            def callback(pageInfo):
-                self.viewportHeight, self.pageBottom = pageInfo
+                def callback(pageInfo):
+                    self.viewportHeight, self.pageBottom = pageInfo
 
-            mw.web.evalWithCallback(
-                '[window.innerHeight, document.body.scrollHeight];', callback
-            )
-        elif self.origBridgeCmd:
-            return self.origBridgeCmd(cmd)
+                mw.web.evalWithCallback(
+                    '[window.innerHeight, document.body.scrollHeight];', callback
+                )
+            elif self.origBridgeCmd:
+                return self.origBridgeCmd(cmd)
+        except RecursionError:
+            print(f"RecursionError: `{self.origBridgeCmd}`")
+            pass
 
     def setZoom(self, factor=None):
         if factor:
