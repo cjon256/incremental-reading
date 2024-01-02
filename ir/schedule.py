@@ -42,7 +42,8 @@ from .util import showBrowser
 SCHEDULE_EXTRACT = 0
 SCHEDULE_SOON = 1
 SCHEDULE_LATER = 2
-SCHEDULE_CUSTOM = 3
+SCHEDULE_NEVER = 3
+SCHEDULE_CUSTOM = 4
 
 
 class Scheduler:
@@ -254,6 +255,10 @@ class Scheduler:
             value = self.settings['laterValue']
             randomize = self.settings['laterRandom']
             method = self.settings['laterMethod']
+        elif ease == SCHEDULE_NEVER:
+            value = 90
+            randomize = True
+            method = 'percent'
         elif ease == SCHEDULE_CUSTOM:
             self.reposition(card, 1)
             self.showDialog(card)

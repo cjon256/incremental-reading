@@ -210,7 +210,7 @@ def answerButtonList(self, _old):
     if isIrCard(self.card):
         if mw.readingManager.settings['prioEnabled']:
             return ((1, _('Next')),)
-        return ((1, _('Soon')), (2, _('Later')), (3, _('Custom')))
+        return ((1, _('Soon')), (2, _('Later')), (3, _('Never')), (4, _('Custom')))
     return _old(self)
 
 
