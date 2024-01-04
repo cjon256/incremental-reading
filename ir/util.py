@@ -17,16 +17,23 @@ import stat
 import time
 from urllib.parse import unquote
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QAction, QMenu, QSpinBox
+from anki.cards import Card
+
+try:
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QKeySequence
+except ModuleNotFoundError:
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtGui import QKeySequence
+
 from aqt import dialogs, mw
+from aqt.qt import QAction, QMenu, QSpinBox
 from bs4 import BeautifulSoup
 
 
-def isIrCard(card):
+def isIrCard(card: Card) -> bool:
     return card and (
-        card.model()['name'] == mw.readingManager.settings['modelName']
+        card.note_type()['name'] == mw.readingManager.settings['modelName']
     )
 
 
@@ -92,15 +99,15 @@ def addMenuItem(path, text, function, keys=None):
 
 
 def getField(note, fieldName):
-    model = note.model()
-    index, _ = mw.col.models.fieldMap(model)[fieldName]
+    model = note.note_type()
+    index, _ = mw.col.models.field_map(model)[fieldName]
     return note.fields[index]
 
 
 def setField(note, field, value):
     """Set the value of a note field. Overwrite any existing value."""
-    model = note.model()
-    index, _ = mw.col.models.fieldMap(model)[field]
+    model = note.note_type()
+    index, _ = mw.col.models.field_map(model)[field]
     note.fields[index] = value
 
 
@@ -108,7 +115,7 @@ def getFieldNames(modelName):
     """Return list of field names for given model name."""
     if not modelName:
         return []
-    return mw.col.models.fieldNames(mw.col.models.byName(modelName))
+    return mw.col.models.field_names(mw.col.models.by_name(modelName))
 
 
 def createSpinBox(value, minimum, maximum, step):
@@ -120,12 +127,12 @@ def createSpinBox(value, minimum, maximum, step):
 
 
 def setComboBoxItem(comboBox, text):
-    index = comboBox.findText(text, Qt.MatchFixedString)
+    index = comboBox.findText(text, Qt.MatchFlag.MatchFixedString)
     comboBox.setCurrentIndex(index)
 
 
 def removeComboBoxItem(comboBox, text):
-    index = comboBox.findText(text, Qt.MatchFixedString)
+    index = comboBox.findText(text, Qt.MatchFlag.MatchFixedString)
     comboBox.removeItem(index)
 
 

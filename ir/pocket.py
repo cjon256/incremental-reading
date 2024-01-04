@@ -15,29 +15,29 @@
 from json.decoder import JSONDecodeError
 from urllib.parse import urlencode
 
-from anki.utils import isMac, isWin
+from anki.utils import is_mac, is_win
 from aqt.utils import askUser, openLink, showCritical, showInfo
 
 from requests import post
 
 
 class Pocket:
-    accessToken = None
-    redirectURI = 'https://github.com/luoliyan/incremental-reading'
-    headers = {'X-Accept': 'application/json'}
+    _accessToken = None
+    _redirectURI = 'https://github.com/luoliyan/incremental-reading'
+    _headers = {'X-Accept': 'application/json'}
 
-    if isWin:
+    if is_win:
         consumerKey = '71462-da4f02100e7e381cbc4a86df'
-    elif isMac:
+    elif is_mac:
         consumerKey = '71462-ed224e5a561a545814023bf9'
     else:
         consumerKey = '71462-05fb63bf0314903c7e73c52f'
 
     def getArticles(self):
-        if not self.accessToken:
-            self.accessToken = self._authenticate()
+        if not self._accessToken:
+            self._accessToken = self._authenticate()
 
-        if not self.accessToken:
+        if not self._accessToken:
             showCritical('Authentication failed.')
             return []
 
@@ -45,13 +45,13 @@ class Pocket:
             'https://getpocket.com/v3/get',
             json={
                 'consumer_key': self.consumerKey,
-                'access_token': self.accessToken,
+                'access_token': self._accessToken,
                 'contentType': 'article',
                 'count': 30,
                 'detailType': 'complete',
                 'sort': 'newest',
             },
-            headers=self.headers,
+            headers=self._headers,
         )
 
         if response.json()['list']:
@@ -68,9 +68,9 @@ class Pocket:
             'https://getpocket.com/v3/oauth/request',
             json={
                 'consumer_key': self.consumerKey,
-                'redirect_uri': self.redirectURI,
+                'redirect_uri': self._redirectURI,
             },
-            headers=self.headers,
+            headers=self._headers,
         )
 
         requestToken = response.json()['code']
@@ -78,7 +78,7 @@ class Pocket:
         authUrl = 'https://getpocket.com/auth/authorize?'
         authParams = {
             'request_token': requestToken,
-            'redirect_uri': self.redirectURI,
+            'redirect_uri': self._redirectURI,
         }
 
         openLink(authUrl + urlencode(authParams))
@@ -88,7 +88,7 @@ class Pocket:
         response = post(
             'https://getpocket.com/v3/oauth/authorize',
             json={'consumer_key': self.consumerKey, 'code': requestToken},
-            headers=self.headers,
+            headers=self._headers,
         )
 
         try:
@@ -101,7 +101,7 @@ class Pocket:
             'https://getpocket.com/v3/send',
             json={
                 'consumer_key': self.consumerKey,
-                'access_token': self.accessToken,
+                'access_token': self._accessToken,
                 'actions': [
                     {'action': 'archive', 'item_id': article['item_id']}
                 ],

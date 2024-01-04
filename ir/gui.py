@@ -19,39 +19,24 @@
 
 from unicodedata import normalize
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import (
-    QButtonGroup,
-    QCheckBox,
-    QComboBox,
-    QDialog,
-    QDialogButtonBox,
-    QGroupBox,
-    QHBoxLayout,
-    QKeySequenceEdit,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QRadioButton,
-    QTabWidget,
-    QVBoxLayout,
-    QWidget,
-)
+try:
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtGui import QFont
+except ModuleNotFoundError:
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtGui import QFont
 
 from anki.notes import Note
 from aqt import mw
+from aqt.qt import (QButtonGroup, QCheckBox, QComboBox, QDialog,
+                    QDialogButtonBox, QGroupBox, QHBoxLayout, QKeySequenceEdit,
+                    QLabel, QLineEdit, QPushButton, QRadioButton, QTabWidget,
+                    QVBoxLayout, QWidget)
 from aqt.tagedit import TagEdit
 from aqt.utils import showInfo, showWarning, tooltip
 
-from .util import (
-    createSpinBox,
-    getColorList,
-    getFieldNames,
-    removeComboBoxItem,
-    setComboBoxItem,
-    setField,
-)
+from .util import (createSpinBox, getColorList, getFieldNames,
+                   removeComboBoxItem, setComboBoxItem, setField)
 
 
 class SettingsDialog:
@@ -132,11 +117,11 @@ class SettingsDialog:
         tabWidget.addTab(zoomScrollTab, 'Zoom / Scroll')
 
         buttonBox = QDialogButtonBox(
-            QDialogButtonBox.Close | QDialogButtonBox.Save
+            QDialogButtonBox.StandardButton.Close | QDialogButtonBox.StandardButton.Save
         )
         buttonBox.accepted.connect(dialog.accept)
         buttonBox.rejected.connect(dialog.reject)
-        buttonBox.setOrientation(Qt.Horizontal)
+        buttonBox.setOrientation(Qt.Orientation.Horizontal)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(tabWidget)
@@ -147,7 +132,7 @@ class SettingsDialog:
 
         done = False
         while not done:
-            if dialog.exec_():
+            if dialog.exec():
                 done = self._saveChanges()
             else:
                 done = True
@@ -255,21 +240,23 @@ class SettingsDialog:
         return done
 
     def _addPrioFields(self):
-        model = mw.col.models.byName(self.settings['modelName'])
+        model = mw.col.models.by_name(self.settings['modelName'])
         if self.settings['prioField'] in getFieldNames(
             self.settings['modelName']
         ):
             return
-        field = mw.col.models.newField(self.settings['prioField'])
-        mw.col.models.addField(model, field)
+        field = mw.col.models.new_field(self.settings['prioField'])
+        mw.col.models.add_field(model, field)
+        mw.col.models.update_dict(model)
         for (nid,) in mw.col.db.execute(
             'SELECT id FROM notes WHERE mid = ?', model['id']
         ):
-            note = mw.col.getNote(nid)
+            note = mw.col.get_note(nid)
             setField(
                 note, self.settings['prioField'], self.settings['prioDefault']
             )
-            note.flush()
+            #note.flush()
+            mw.col.update_note(note)
         showInfo(
             'A <b><i>Priority</i></b> field has been added to your IR notes. '
             'Valid priority values are integers 1-10, where 10 represents '
@@ -611,7 +598,7 @@ class SettingsDialog:
             '}'
         ) % (bgColor, textColor)
         self.colorPreviewLabel.setStyleSheet(styleSheet)
-        self.colorPreviewLabel.setAlignment(Qt.AlignCenter)
+        self.colorPreviewLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def _getStylingGroupBox(self):
         boldLabel = QLabel('Bold')
@@ -723,7 +710,7 @@ class SettingsDialog:
             self.settings['organizerFormat'].replace('\t', r'\t')
         )
         font = QFont('Lucida Sans Typewriter')
-        font.setStyleHint(QFont.Monospace)
+        font.setStyleHint(QFont.StyleHint.Monospace)
         self.organizerFormatEditBox.setFont(font)
 
         modeLayout = QHBoxLayout()
@@ -1104,7 +1091,7 @@ class SettingsDialog:
         self.sourceFormatEditBox.setFixedWidth(400)
         self.sourceFormatEditBox.setText(str(self.settings['sourceFormat']))
         font = QFont('Lucida Sans Typewriter')
-        font.setStyleHint(QFont.Monospace)
+        font.setStyleHint(QFont.StyleHint.Monospace)
         self.sourceFormatEditBox.setFont(font)
 
         sourceFormatLayout = QHBoxLayout()

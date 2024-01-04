@@ -19,26 +19,31 @@
 
 from collections import defaultdict
 
+from anki.decks import DeckId
 from anki.notes import Note
 from aqt import mw
 from aqt.addcards import AddCards
 from aqt.editcurrent import EditCurrent
 from aqt.utils import getText, showInfo, showWarning, tooltip
 
+from .settings import SettingsManager
 from .util import fixImages, getField, setField
-
 
 SCHEDULE_EXTRACT = 0
 
 
 class TextManager:
-    history = defaultdict(list)
+    _history = defaultdict(list)
+    _settings: SettingsManager = None
+
+    def changeProfile(self, settings: SettingsManager):
+        self._settings = settings
 
     def highlight(self, bgColor=None, textColor=None):
         if not bgColor:
-            bgColor = self.settings['highlightBgColor']
+            bgColor = self._settings['highlightBgColor']
         if not textColor:
-            textColor = self.settings['highlightTextColor']
+            textColor = self._settings['highlightTextColor']
 
         script = "highlight('%s', '%s')" % (bgColor, textColor)
         mw.web.eval(script)
@@ -53,8 +58,11 @@ class TextManager:
         self.save()
 
     def extract(self, settings=None):
+        if mw.state != 'review':
+            return
+
         if not settings:
-            settings = self.settings
+            settings = self._settings
 
         if not mw.web.selectedText() and not settings['editExtract']:
             showInfo('Please select some text to extract.')
@@ -72,13 +80,13 @@ class TextManager:
     def create(self, text, settings):
         currentCard = mw.reviewer.card
         currentNote = currentCard.note()
-        model = mw.col.models.byName(settings['modelName'])
+        model = mw.col.models.by_name(settings['modelName'])
         newNote = Note(mw.col, model)
         newNote.tags = currentNote.tags
         setField(newNote, settings['textField'], fixImages(text))
 
         if settings['extractDeck']:
-            deck = mw.col.decks.byName(settings['extractDeck'])
+            deck = mw.col.decks.by_name(settings['extractDeck'])
             if not deck:
                 showWarning(
                     'Destination deck no longer exists. '
@@ -96,14 +104,14 @@ class TextManager:
                 setField(
                     newNote,
                     settings['sourceField'],
-                    getField(currentNote, self.settings['sourceField']),
+                    getField(currentNote, self._settings['sourceField']),
                 )
 
             if settings['editExtract']:
                 highlight = self._editExtract(newNote, did, settings)
             else:
                 highlight = True
-                newNote.model()['did'] = did
+                newNote.note_type()['did'] = did
                 mw.col.addNote(newNote)
         else:
             if settings['copyTitle']:
@@ -144,19 +152,18 @@ class TextManager:
         if settings['editSource']:
             EditCurrent(mw)
 
-    def _editExtract(self, note, did, settings):
+    def _editExtract(self, note: Note, deckId: DeckId, settings: SettingsManager):
         def onAdd():
-            addCards.rejected.disconnect(self.undo)
-            addCards.reject()
+            self.highlight(
+                settings['extractBgColor'], settings['extractTextColor']
+            )
 
         addCards = AddCards(mw)
-        addCards.rejected.connect(self.undo)
+        addCards.set_note(note, deckId)
         addCards.addButton.clicked.connect(onAdd)
-        addCards.editor.setNote(note, focusTo=0)
-        deckName = mw.col.decks.get(did)['name']
-        addCards.deckChooser.setDeckName(deckName)
-        addCards.modelChooser.models.setText(settings['modelName'])
-        return True
+
+        # Do not highlight immediately, but only after the card is added
+        return False
 
     def _getTitle(self, note, did, title, settings):
         title, accepted = getText(
@@ -165,7 +172,7 @@ class TextManager:
 
         if accepted:
             setField(note, settings['titleField'], title)
-            note.model()['did'] = did
+            note.note_type()['did'] = did
             mw.col.addNote(note)
 
         return accepted
@@ -177,12 +184,13 @@ class TextManager:
     def undo(self):
         note = mw.reviewer.card.note()
 
-        if note.id not in self.history or not self.history[note.id]:
+        if note.id not in self._history or not self._history[note.id]:
             showInfo('No undo history for this note.')
             return
 
-        note['Text'] = self.history[note.id].pop()
-        note.flush()
+        note['Text'] = self._history[note.id].pop()
+        #note.flush()
+        mw.col.update_note(note)
         mw.reset()
         tooltip('Undone')
 
@@ -190,9 +198,10 @@ class TextManager:
         def callback(text):
             if text:
                 note = mw.reviewer.card.note()
-                self.history[note.id].append(note['Text'])
+                self._history[note.id].append(note['Text'])
                 note['Text'] = text
-                note.flush()
+                #note.flush()
+                mw.col.update_note(note)
 
         mw.web.evalWithCallback(
             'document.getElementsByClassName("ir-text")[0].innerHTML;',

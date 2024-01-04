@@ -12,9 +12,8 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QLabel, QVBoxLayout
-
 from aqt import mw
+from aqt.qt import QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
 from ._version import __version__
 
@@ -46,7 +45,7 @@ def showAbout():
     )
     label.setText(text)
 
-    buttonBox = QDialogButtonBox(QDialogButtonBox.Ok)
+    buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
     buttonBox.accepted.connect(dialog.accept)
 
     layout = QVBoxLayout()
@@ -55,4 +54,4 @@ def showAbout():
 
     dialog.setLayout(layout)
     dialog.setWindowTitle('About')
-    dialog.exec_()
+    dialog.exec()
