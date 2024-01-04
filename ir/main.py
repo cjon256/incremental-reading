@@ -116,9 +116,9 @@ class ReadingManager:
 
     def onPrepareQA(self, html, card, context):
         if self.settings['prioEnabled']:
-            answerShortcuts = ['1', '2', '3', '4']
+            answerShortcuts = ['1', '2', '3', '4', '5', '6']
         else:
-            answerShortcuts = ['4']
+            answerShortcuts = ['6']
 
         activeAnswerShortcuts = [
             next(
@@ -210,7 +210,12 @@ def answerButtonList(self, _old):
     if isIrCard(self.card):
         if mw.readingManager.settings['prioEnabled']:
             return ((1, _('Next')),)
-        return ((1, _('Soon')), (2, _('Later')), (3, _('Never')), (4, _('Custom')))
+        return ((1, _('Soon')),
+                (2, _('Soonish')),
+                (3, _('Later')),
+                (4, _('Much Later')),
+                (5, _('Never')),
+                (6, _('Custom')))
     return _old(self)
 
 

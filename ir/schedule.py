@@ -41,9 +41,11 @@ from .util import showBrowser
 
 SCHEDULE_EXTRACT = 0
 SCHEDULE_SOON = 1
-SCHEDULE_LATER = 2
-SCHEDULE_NEVER = 3
-SCHEDULE_CUSTOM = 4
+SCHEDULE_SOONISH = 2
+SCHEDULE_LATER = 3
+SCHEDULE_MUCHLATER = 4
+SCHEDULE_NEVER = 5
+SCHEDULE_CUSTOM = 6
 
 
 class Scheduler:
@@ -251,8 +253,16 @@ class Scheduler:
             value = self.settings['soonValue']
             randomize = self.settings['soonRandom']
             method = self.settings['soonMethod']
+        elif ease == SCHEDULE_SOONISH:
+            value = self.settings['soonValue'] * 2
+            randomize = self.settings['soonRandom']
+            method = self.settings['soonMethod']
         elif ease == SCHEDULE_LATER:
             value = self.settings['laterValue']
+            randomize = self.settings['laterRandom']
+            method = self.settings['laterMethod']
+        elif ease == SCHEDULE_MUCHLATER:
+            value = self.settings['laterValue'] * 2
             randomize = self.settings['laterRandom']
             method = self.settings['laterMethod']
         elif ease == SCHEDULE_NEVER:
