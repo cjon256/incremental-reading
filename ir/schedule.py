@@ -238,7 +238,7 @@ class Scheduler:
         for item in allItems:
             self.cardListWidget.addItem(item)
 
-    def answer(self, card, ease):
+    def answer(self, card, ease, old_func):
         if self.settings['prioEnabled']:
             # reposition the card at the end of the organizer
             cardCount = len(self._getCardInfo(card.did))
@@ -249,30 +249,35 @@ class Scheduler:
             value = self.settings['extractValue']
             randomize = self.settings['extractRandom']
             method = self.settings['extractMethod']
-        elif ease == SCHEDULE_SOON:
+        elif ease == SCHEDULE_SOON:       # 1
             value = self.settings['soonValue']
             randomize = self.settings['soonRandom']
             method = self.settings['soonMethod']
-        elif ease == SCHEDULE_SOONISH:
+        elif ease == SCHEDULE_SOONISH:    # 2
             value = self.settings['soonValue'] * 2
-            randomize = self.settings['soonRandom']
+            randomize = True
             method = self.settings['soonMethod']
-        elif ease == SCHEDULE_LATER:
+        elif ease == SCHEDULE_LATER:      # 3
             value = self.settings['laterValue']
             randomize = self.settings['laterRandom']
             method = self.settings['laterMethod']
-        elif ease == SCHEDULE_MUCHLATER:
+        elif ease == SCHEDULE_MUCHLATER:  # 4
             value = self.settings['laterValue'] * 2
-            randomize = self.settings['laterRandom']
+            randomize = True
             method = self.settings['laterMethod']
-        elif ease == SCHEDULE_NEVER:
+        elif ease == SCHEDULE_NEVER:      # 5 (shortcut does not work)
             value = 90
             randomize = True
             method = 'percent'
-        elif ease == SCHEDULE_CUSTOM:
+        elif ease == SCHEDULE_CUSTOM:     # 6 (shortcut also does not work)
             self.reposition(card, 1)
             self.showDialog(card)
             return
+
+        if ease > 4:
+            ease = 4
+
+        old_func(ease)
 
         if method == 'percent':
             totalCards = len([c['id'] for c in self._getCardInfo(card.did)])

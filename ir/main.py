@@ -23,6 +23,7 @@ from aqt.reviewer import Reviewer
 from anki.lang import _
 
 import sip
+from functools import partial
 
 from .about import showAbout
 from .gui import SettingsDialog
@@ -221,9 +222,11 @@ def answerButtonList(self, _old):
 
 def answerCard(self, ease, _old):
     card = self.card
-    _old(self, ease)
     if isIrCard(card):
-        mw.readingManager.scheduler.answer(card, ease)
+        _new = partial(_old, self)
+        ease = mw.readingManager.scheduler.answer(card, ease, _new)
+    else:
+        _old(self, ease)
 
 
 def buttonTime(self, i, _old):
