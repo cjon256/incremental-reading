@@ -44,8 +44,8 @@ SCHEDULE_SOON = 1
 SCHEDULE_SOONISH = 2
 SCHEDULE_LATER = 3
 SCHEDULE_MUCHLATER = 4
-SCHEDULE_NEVER = 5
 SCHEDULE_CUSTOM = 6
+SCHEDULE_NEVER = 8
 
 
 class Scheduler:
@@ -138,6 +138,7 @@ class Scheduler:
                     info=info, title=title
                 )
             except KeyError as keyerror:
+                tooltip(f"KeyError in _updateListItems: {keyerror}")
                 text = str(title)
 
             item = QListWidgetItem(text)

@@ -21,6 +21,7 @@ from aqt import mw
 from aqt.browser import Browser
 from aqt.reviewer import Reviewer
 from anki.lang import _
+from aqt.utils import tooltip
 
 import sip
 from functools import partial
@@ -116,10 +117,13 @@ class ReadingManager:
         self.settings.loadMenuItems()
 
     def onPrepareQA(self, html, card, context):
-        if self.settings['prioEnabled']:
-            answerShortcuts = ['1', '2', '3', '4', '5', '6']
+        if isIrCard(card):
+            if self.settings['prioEnabled']:
+                answerShortcuts = ['1', '2', '3', '4', '8', '6']
+            else:
+                answerShortcuts = ['6']
         else:
-            answerShortcuts = ['6']
+            answerShortcuts = ['1', '2', '3', '4']
 
         activeAnswerShortcuts = [
             next(
@@ -130,8 +134,10 @@ class ReadingManager:
 
         if isIrCard(card):
             if context == 'reviewQuestion':
+                # add some extra shortcuts good for reading
                 self.qshortcuts = mw.applyShortcuts(self.shortcuts)
                 mw.stateShortcuts += self.qshortcuts
+            # remove any existing shortcuts in answerShortcuts
             for shortcut in activeAnswerShortcuts:
                 if shortcut:
                     mw.stateShortcuts.remove(shortcut)
@@ -211,12 +217,16 @@ def answerButtonList(self, _old):
     if isIrCard(self.card):
         if mw.readingManager.settings['prioEnabled']:
             return ((1, _('Next')),)
+        shortcuts = []
+        shortcuts.append(('8', lambda: mw.reviewer._answerCard(8)))
+        shortcuts.append(('6', lambda: mw.reviewer._answerCard(6)))
+        mw.stateShortcuts += mw.applyShortcuts(shortcuts)
         return ((1, _('Soon')),
                 (2, _('Soonish')),
                 (3, _('Later')),
                 (4, _('Much Later')),
-                (5, _('Never')),
-                (6, _('Custom')))
+                (6, _('6 Custom')),
+                (8, _('8 Never')))
     return _old(self)
 
 
@@ -238,7 +248,8 @@ def buttonTime(self, i, _old):
 def onBrowserClosed(self):
     try:
         mw.readingManager.scheduler._updateListItems()
-    except:
+    except Exception as e:
+        tooltip(f"onBrowserClosed exception {e}")
         return
 
 
