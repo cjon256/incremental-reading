@@ -85,7 +85,8 @@ except (NameError, AttributeError):
 
 # base64 support for Atom feeds that contain embedded binary data
 try:
-    import base64, binascii
+    import base64
+    import binascii
 except ImportError:
     base64 = binascii = None
 else:
@@ -129,8 +130,6 @@ ACCEPTABLE_URI_SCHEMES = (
 )
 #ACCEPTABLE_URI_SCHEMES = ()
 
-# ---------- required modules (should come with any Python distribution) ----------
-from . import cgi
 import codecs
 import copy
 import datetime
@@ -139,12 +138,14 @@ import re
 import struct
 import time
 import types
-import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
+import urllib.error
 import urllib.parse
+import urllib.request
 import warnings
+from html.entities import codepoint2name, entitydefs, name2codepoint
 
-from html.entities import name2codepoint, codepoint2name, entitydefs
+# ---------- required modules (should come with any Python distribution) ----------
+from . import cgi
 
 try:
     from io import BytesIO as _StringIO

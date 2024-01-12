@@ -20,62 +20,62 @@ from aqt import mw
 
 from .util import isIrCard, loadFile, viewingIrText
 
+
 class ViewManagerException(Exception):
     pass
+
 
 class ViewManager:
     viewportHeight = None
     pageBottom = None
 
     def __init__(self):
-        self.scrollScript = loadFile('web', 'scroll.js')
-        self.textScript = loadFile('web', 'text.js')
-        self.widthScript = loadFile('web', 'width.js')
+        self.scrollScript = loadFile("web", "scroll.js")
+        self.textScript = loadFile("web", "text.js")
+        self.widthScript = loadFile("web", "width.js")
         self.zoomFactor = 1
         self.origBridgeCmd = None
-        addHook('afterStateChange', self.resetZoom)
-        addHook('prepareQA', self.prepareCard)
+        addHook("afterStateChange", self.resetZoom)
+        addHook("prepareQA", self.prepareCard)
         mw.web.page().scrollPositionChanged.connect(self.saveScroll)
 
     def prepareCard(self, html, card, context):
-        if (isIrCard(card) and self.settings['limitWidth']) or self.settings[
-            'limitWidthAll'
+        if (isIrCard(card) and self.settings["limitWidth"]) or self.settings[
+            "limitWidthAll"
         ]:
-            js = self.widthScript.format(maxWidth=self.settings['maxWidth'])
+            js = self.widthScript.format(maxWidth=self.settings["maxWidth"])
         else:
-            js = ''
+            js = ""
 
-        if isIrCard(card) and context.startswith('review'):
+        if isIrCard(card) and context.startswith("review"):
             self.origBridgeCmd = mw.web.onBridgeCmd
             mw.web.onBridgeCmd = self.storePageInfo
             cid = str(card.id)
 
-            if cid not in self.settings['zoom']:
-                self.settings['zoom'][cid] = 1
+            if cid not in self.settings["zoom"]:
+                self.settings["zoom"][cid] = 1
 
-            if cid not in self.settings['scroll']:
-                self.settings['scroll'][cid] = 0
+            if cid not in self.settings["scroll"]:
+                self.settings["scroll"][cid] = 0
 
             self.setZoom()
             js += self.textScript
-            js += self.scrollScript.format(
-                savedPos=self.settings['scroll'][cid]
-            )
+            js += self.scrollScript.format(savedPos=self.settings["scroll"][cid])
 
         if js:
-            html += '<script>' + js + '</script>'
+            html += "<script>" + js + "</script>"
 
         return html
 
     def storePageInfo(self, cmd):
         try:
-            if cmd == 'store':
+            if cmd == "store":
 
                 def callback(pageInfo):
                     self.viewportHeight, self.pageBottom = pageInfo
 
                 mw.web.evalWithCallback(
-                    '[window.innerHeight, document.body.scrollHeight];', callback
+                    "[window.innerHeight, document.body.scrollHeight];", callback
                 )
             elif self.origBridgeCmd:
                 return self.origBridgeCmd(cmd)
@@ -87,79 +87,77 @@ class ViewManager:
         if factor:
             mw.web.setZoomFactor(factor)
         else:
-            mw.web.setZoomFactor(
-                self.settings['zoom'][str(mw.reviewer.card.id)]
-            )
+            mw.web.setZoomFactor(self.settings["zoom"][str(mw.reviewer.card.id)])
 
     def zoomIn(self):
         if viewingIrText():
             cid = str(mw.reviewer.card.id)
 
-            if cid not in self.settings['zoom']:
-                self.settings['zoom'][cid] = 1
+            if cid not in self.settings["zoom"]:
+                self.settings["zoom"][cid] = 1
 
-            self.settings['zoom'][cid] += self.settings['zoomStep']
-            mw.web.setZoomFactor(self.settings['zoom'][cid])
-        elif mw.state == 'review':
-            self.zoomFactor += self.settings['zoomStep']
+            self.settings["zoom"][cid] += self.settings["zoomStep"]
+            mw.web.setZoomFactor(self.settings["zoom"][cid])
+        elif mw.state == "review":
+            self.zoomFactor += self.settings["zoomStep"]
             mw.web.setZoomFactor(self.zoomFactor)
         else:
-            self.settings['generalZoom'] += self.settings['zoomStep']
-            mw.web.setZoomFactor(self.settings['generalZoom'])
+            self.settings["generalZoom"] += self.settings["zoomStep"]
+            mw.web.setZoomFactor(self.settings["generalZoom"])
 
     def zoomOut(self):
         if viewingIrText():
             cid = str(mw.reviewer.card.id)
 
-            if cid not in self.settings['zoom']:
-                self.settings['zoom'][cid] = 1
+            if cid not in self.settings["zoom"]:
+                self.settings["zoom"][cid] = 1
 
-            self.settings['zoom'][cid] -= self.settings['zoomStep']
-            mw.web.setZoomFactor(self.settings['zoom'][cid])
-        elif mw.state == 'review':
-            self.zoomFactor -= self.settings['zoomStep']
+            self.settings["zoom"][cid] -= self.settings["zoomStep"]
+            mw.web.setZoomFactor(self.settings["zoom"][cid])
+        elif mw.state == "review":
+            self.zoomFactor -= self.settings["zoomStep"]
             mw.web.setZoomFactor(self.zoomFactor)
         else:
-            self.settings['generalZoom'] -= self.settings['zoomStep']
-            mw.web.setZoomFactor(self.settings['generalZoom'])
+            self.settings["generalZoom"] -= self.settings["zoomStep"]
+            mw.web.setZoomFactor(self.settings["generalZoom"])
 
     def saveScroll(self, event=None):
         if viewingIrText():
 
             def callback(currentPos):
-                self.settings['scroll'][str(mw.reviewer.card.id)] = currentPos
+                self.settings["scroll"][str(mw.reviewer.card.id)] = currentPos
 
-            mw.web.evalWithCallback('window.pageYOffset;', callback)
+            mw.web.evalWithCallback("window.pageYOffset;", callback)
 
     def pageUp(self):
-        currentPos = self.settings['scroll'][str(mw.reviewer.card.id)]
-        movementSize = self.viewportHeight * self.settings['pageScrollFactor']
+        currentPos = self.settings["scroll"][str(mw.reviewer.card.id)]
+        movementSize = self.viewportHeight * self.settings["pageScrollFactor"]
         newPos = max(0, (currentPos - movementSize))
-        mw.web.eval('window.scrollTo(0, {});'.format(newPos))
+        mw.web.eval("window.scrollTo(0, {});".format(newPos))
 
     def pageDown(self):
-        currentPos = self.settings['scroll'][str(mw.reviewer.card.id)]
-        movementSize = self.viewportHeight * self.settings['pageScrollFactor']
+        currentPos = self.settings["scroll"][str(mw.reviewer.card.id)]
+        movementSize = self.viewportHeight * self.settings["pageScrollFactor"]
         newPos = min(self.pageBottom, (currentPos + movementSize))
-        mw.web.eval('window.scrollTo(0, {});'.format(newPos))
+        mw.web.eval("window.scrollTo(0, {});".format(newPos))
 
     def lineUp(self):
-        currentPos = self.settings['scroll'][str(mw.reviewer.card.id)]
-        movementSize = self.viewportHeight * self.settings['lineScrollFactor']
+        currentPos = self.settings["scroll"][str(mw.reviewer.card.id)]
+        movementSize = self.viewportHeight * self.settings["lineScrollFactor"]
         newPos = max(0, (currentPos - movementSize))
-        mw.web.eval('window.scrollTo(0, {});'.format(newPos))
+        mw.web.eval("window.scrollTo(0, {});".format(newPos))
 
     def lineDown(self):
-        currentPos = self.settings['scroll'][str(mw.reviewer.card.id)]
-        movementSize = self.viewportHeight * self.settings['lineScrollFactor']
+        currentPos = self.settings["scroll"][str(mw.reviewer.card.id)]
+        movementSize = self.viewportHeight * self.settings["lineScrollFactor"]
         newPos = min(self.pageBottom, (currentPos + movementSize))
-        mw.web.eval('window.scrollTo(0, {});'.format(newPos))
+        mw.web.eval("window.scrollTo(0, {});".format(newPos))
 
     def resetZoom(self, state, *args):
-        if not hasattr(self, 'settings'):
+        if not hasattr(self, "settings"):
             return
 
-        if state in ['deckBrowser', 'overview']:
-            mw.web.setZoomFactor(self.settings['generalZoom'])
-        elif state == 'review' and not isIrCard(mw.reviewer.card):
+        if state in ["deckBrowser", "overview"]:
+            mw.web.setZoomFactor(self.settings["generalZoom"])
+        elif state == "review" and not isIrCard(mw.reviewer.card):
             self.setZoom(self.zoomFactor)

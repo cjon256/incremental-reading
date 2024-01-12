@@ -14,24 +14,15 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 from datetime import date
-from ssl import _create_unverified_context
-from urllib.error import HTTPError
-from urllib.parse import urlsplit, quote, urlunsplit, SplitResult
-from urllib.request import urlopen
 from mimetypes import guess_extension
+from urllib.error import HTTPError
+from urllib.parse import SplitResult, quote, urlsplit, urlunsplit
 
 from anki.notes import Note
-from anki.utils import (isMac, checksum)
+from anki.utils import checksum
 from aqt import mw
-from aqt.utils import (
-    chooseList,
-    getText,
-    showInfo,
-    showCritical,
-    showWarning,
-    tooltip,
-)
-
+from aqt.utils import chooseList, getText, showCritical, showInfo, showWarning, tooltip
+from bs4 import BeautifulSoup, Comment
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QAbstractItemView,
@@ -41,29 +32,28 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QVBoxLayout,
 )
-
-from bs4 import BeautifulSoup, Comment
 from requests import get
-from requests.exceptions import ConnectionError, InvalidSchema, ConnectionError
+from requests.exceptions import ConnectionError, InvalidSchema
 
 from .lib.feedparser import parse
-
 from .pocket import Pocket
 from .util import setField
 
+
 class ImporterError(Exception):
     pass
+
 
 class Importer:
     pocket = None
 
     def _fetchWebpage(self, url):
-        headers = {'User-Agent': self.settings['userAgent']}
+        headers = {"User-Agent": self.settings["userAgent"]}
         html = get(url, headers=headers).content
 
-        webpage = BeautifulSoup(html, 'html.parser')
+        webpage = BeautifulSoup(html, "html.parser")
 
-        for tagName in self.settings['badTags']:
+        for tagName in self.settings["badTags"]:
             for tag in webpage.find_all(tagName):
                 tag.decompose()
 
@@ -73,33 +63,32 @@ class Importer:
         return webpage
 
     def _createNote(self, title, text, source, priority=None):
-        if self.settings['importDeck']:
-            deck = mw.col.decks.byName(self.settings['importDeck'])
+        if self.settings["importDeck"]:
+            deck = mw.col.decks.byName(self.settings["importDeck"])
             if not deck:
                 showWarning(
-                    'Destination deck no longer exists. '
-                    'Please update your settings.'
+                    "Destination deck no longer exists. " "Please update your settings."
                 )
                 return
-            did = deck['id']
+            did = deck["id"]
         else:
-            did = mw.col.conf['curDeck']
+            did = mw.col.conf["curDeck"]
 
-        model = mw.col.models.byName(self.settings['modelName'])
+        model = mw.col.models.byName(self.settings["modelName"])
         note = Note(mw.col, model)
-        setField(note, self.settings['titleField'], title)
-        setField(note, self.settings['textField'], text)
-        setField(note, self.settings['sourceField'], source)
+        setField(note, self.settings["titleField"], title)
+        setField(note, self.settings["textField"], text)
+        setField(note, self.settings["sourceField"], source)
         if priority:
-            setField(note, self.settings['prioField'], priority)
-        note.model()['did'] = did
+            setField(note, self.settings["prioField"], priority)
+        note.model()["did"] = did
         mw.col.addNote(note)
         mw.deckBrowser.show()
-        return mw.col.decks.get(did)['name']
+        return mw.col.decks.get(did)["name"]
 
     def importWebpage(self, url=None, priority=None, silent=False):
         if not url:
-            url, accepted = getText('Enter URL:', title='Import Webpage')
+            url, accepted = getText("Enter URL:", title="Import Webpage")
         else:
             accepted = True
 
@@ -107,38 +96,37 @@ class Importer:
             return
 
         if not urlsplit(url).scheme:
-            url = 'http://' + url
-        elif urlsplit(url).scheme not in ['http', 'https']:
-            showCritical('Only HTTP requests are supported.')
+            url = "http://" + url
+        elif urlsplit(url).scheme not in ["http", "https"]:
+            showCritical("Only HTTP requests are supported.")
             return
 
         try:
             webpage = self._fetchWebpage(url)
         except HTTPError as error:
             showWarning(
-                'The remote server has returned an error: '
-                'HTTP Error {} ({})'.format(error.code, error.reason)
+                "The remote server has returned an error: "
+                "HTTP Error {} ({})".format(error.code, error.reason)
             )
             raise ImporterError
         except ConnectionError as error:
-            showWarning(f'There was a problem connecting to the website. ({url})')
+            showWarning(f"There was a problem connecting to the website. ({url})")
             raise ImporterError
 
         for img in webpage.find_all("img"):
             self._downloadImage(img, url)
 
         try:
-            body = '\n'.join(map(str, webpage.find('body').children))
+            body = "\n".join(map(str, webpage.find("body").children))
         except AttributeError:
-            showWarning(f'Webpage body empty? ({url})')
+            showWarning(f"Webpage body empty? ({url})")
             raise ImporterError
 
-
-        source = self.settings['sourceFormat'].format(
+        source = self.settings["sourceFormat"].format(
             date=date.today(), url='<a href="%s">%s</a>' % (url, url)
         )
 
-        if self.settings['prioEnabled'] and not priority:
+        if self.settings["prioEnabled"] and not priority:
             priority = self._getPriority(webpage.title.string)
 
         if webpage.title is None:
@@ -150,78 +138,82 @@ class Importer:
             raise ImporterError
 
         if not silent:
-            tooltip('Added to deck: {}'.format(deck))
+            tooltip("Added to deck: {}".format(deck))
 
         return deck
 
     def _downloadImage(self, img, articleUrl):
         try:
-            imgAddress = img['src']
+            imgAddress = img["src"]
             split = urlsplit(articleUrl)
             if imgAddress.startswith("//"):
                 imgAddress = "http:" + imgAddress
             elif not urlsplit(imgAddress).scheme:
-                imgAddress = urlunsplit(SplitResult(split.scheme, split.netloc, imgAddress, '', ''))
+                imgAddress = urlunsplit(
+                    SplitResult(split.scheme, split.netloc, imgAddress, "", "")
+                )
 
-            response = get(imgAddress, headers = {'Referer': articleUrl.encode("utf8")})
+            response = get(imgAddress, headers={"Referer": articleUrl.encode("utf8")})
             data = response.content
-            ext = guess_extension(response.headers['content-type'].partition(';')[0].strip())
+            ext = guess_extension(
+                response.headers["content-type"].partition(";")[0].strip()
+            )
             fileName = "paste-ir-{}.{}".format(checksum(data), ext)
             mw.col.media.writeData(fileName, data)
-            img['src'] = quote(fileName.encode("utf8"))
+            img["src"] = quote(fileName.encode("utf8"))
         except (KeyError, InvalidSchema, ConnectionError):
             pass
 
     def _getPriority(self, name=None):
         if name:
-            prompt = 'Select priority for <b>{}</b>'.format(name)
+            prompt = "Select priority for <b>{}</b>".format(name)
         else:
-            prompt = 'Select priority for import'
-        return self.settings['priorities'][
-            chooseList(prompt, self.settings['priorities'])
+            prompt = "Select priority for import"
+        return self.settings["priorities"][
+            chooseList(prompt, self.settings["priorities"])
         ]
 
     def importFeed(self):
-        url, accepted = getText('Enter URL:', title='Import Feed')
+        url, accepted = getText("Enter URL:", title="Import Feed")
 
         if not url or not accepted:
             return
 
         if not urlsplit(url).scheme:
-            url = 'http://' + url
+            url = "http://" + url
 
-        log = self.settings['feedLog']
+        log = self.settings["feedLog"]
 
         try:
             feed = parse(
                 url,
-                agent=self.settings['userAgent'],
-                etag=log[url]['etag'],
-                modified=log[url]['modified'],
+                agent=self.settings["userAgent"],
+                etag=log[url]["etag"],
+                modified=log[url]["modified"],
             )
         except KeyError:
-            log[url] = {'downloaded': []}
-            feed = parse(url, agent=self.settings['userAgent'])
+            log[url] = {"downloaded": []}
+            feed = parse(url, agent=self.settings["userAgent"])
 
-        if feed['status'] not in [200, 301, 302]:
+        if feed["status"] not in [200, 301, 302]:
             showWarning(
-                'The remote server has returned an unexpected status: '
-                '{}'.format(feed['status'])
+                "The remote server has returned an unexpected status: "
+                "{}".format(feed["status"])
             )
 
-        if self.settings['prioEnabled']:
+        if self.settings["prioEnabled"]:
             priority = self._getPriority()
         else:
             priority = None
 
         entries = [
-            {'text': e['title'], 'data': e}
-            for e in feed['entries']
-            if e['link'] not in log[url]['downloaded']
+            {"text": e["title"], "data": e}
+            for e in feed["entries"]
+            if e["link"] not in log[url]["downloaded"]
         ]
 
         if not entries:
-            showInfo('There are no new items in this feed.')
+            showInfo("There are no new items in this feed.")
             return
 
         selected = self._select(entries)
@@ -231,27 +223,22 @@ class Importer:
 
         n = len(selected)
 
-        mw.progress.start(
-            label='Importing feed entries...', max=n, immediate=True
-        )
+        mw.progress.start(label="Importing feed entries...", max=n, immediate=True)
 
         try:
             for i, entry in enumerate(selected, start=1):
-                deck = self.importWebpage(entry['link'], priority, True)
-                log[url]['downloaded'].append(entry['link'])
+                deck = self.importWebpage(entry["link"], priority, True)
+                log[url]["downloaded"].append(entry["link"])
                 mw.progress.update(value=i)
 
-            log[url]['etag'] = feed.etag if hasattr(feed, 'etag') else ''
-            log[url]['modified'] = (
-                feed.modified if hasattr(feed, 'modified') else ''
-            )
+            log[url]["etag"] = feed.etag if hasattr(feed, "etag") else ""
+            log[url]["modified"] = feed.modified if hasattr(feed, "modified") else ""
 
             mw.progress.finish()
-            tooltip('Added {} item(s) to deck: {}'.format(n, deck))
+            tooltip("Added {} item(s) to deck: {}".format(n, deck))
         except ImporterError:
             mw.progress.finish()
-            tooltip('Failed to import Feeds')
-
+            tooltip("Failed to import Feeds")
 
     def importPocket(self):
         if not self.pocket:
@@ -263,7 +250,7 @@ class Importer:
 
         selected = self._select(articles)
 
-        if self.settings['prioEnabled']:
+        if self.settings["prioEnabled"]:
             priority = self._getPriority()
         else:
             priority = None
@@ -273,20 +260,20 @@ class Importer:
                 n = len(selected)
 
                 mw.progress.start(
-                    label='Importing Pocket articles...', max=n, immediate=True
+                    label="Importing Pocket articles...", max=n, immediate=True
                 )
 
                 for i, article in enumerate(selected, start=1):
-                    deck = self.importWebpage(article['given_url'], priority, True)
-                    if self.settings['pocketArchive']:
+                    deck = self.importWebpage(article["given_url"], priority, True)
+                    if self.settings["pocketArchive"]:
                         self.pocket.archive(article)
                     mw.progress.update(value=i)
 
                 mw.progress.finish()
-                tooltip('Added {} item(s) to deck: {}'.format(n, deck))
+                tooltip("Added {} item(s) to deck: {}".format(n, deck))
         except ImporterError:
             mw.progress.finish()
-            tooltip('Failed to import Articles')
+            tooltip("Failed to import Articles")
 
     def _select(self, choices):
         if not choices:
@@ -298,13 +285,11 @@ class Importer:
         listWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         for c in choices:
-            item = QListWidgetItem(c['text'])
-            item.setData(Qt.UserRole, c['data'])
+            item = QListWidgetItem(c["text"])
+            item.setData(Qt.UserRole, c["data"])
             listWidget.addItem(item)
 
-        buttonBox = QDialogButtonBox(
-            QDialogButtonBox.Close | QDialogButtonBox.Save
-        )
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Close | QDialogButtonBox.Save)
         buttonBox.accepted.connect(dialog.accept)
         buttonBox.rejected.connect(dialog.reject)
         buttonBox.setOrientation(Qt.Horizontal)

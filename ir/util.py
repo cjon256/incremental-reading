@@ -17,45 +17,43 @@ import stat
 import time
 from urllib.parse import unquote
 
+from aqt import dialogs, mw
+from bs4 import BeautifulSoup
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QAction, QMenu, QSpinBox
-from aqt import dialogs, mw
-from bs4 import BeautifulSoup
 
 
 def isIrCard(card):
-    return card and (
-        card.model()['name'] == mw.readingManager.settings['modelName']
-    )
+    return card and (card.model()["name"] == mw.readingManager.settings["modelName"])
 
 
 def viewingIrText():
     return (
         isIrCard(mw.reviewer.card)
-        and (mw.reviewer.state == 'question')
-        and (mw.state == 'review')
+        and (mw.reviewer.state == "question")
+        and (mw.state == "review")
     )
 
 
 def addMenu(fullPath):
-    if not hasattr(mw, 'customMenus'):
+    if not hasattr(mw, "customMenus"):
         mw.customMenus = {}
 
-    if len(fullPath.split('::')) == 2:
-        menuPath, submenuPath = fullPath.split('::')
+    if len(fullPath.split("::")) == 2:
+        menuPath, submenuPath = fullPath.split("::")
         hasSubmenu = True
     else:
         menuPath = fullPath
         hasSubmenu = False
 
     if menuPath not in mw.customMenus:
-        menu = QMenu('&' + menuPath, mw)
+        menu = QMenu("&" + menuPath, mw)
         mw.customMenus[menuPath] = menu
         mw.form.menubar.insertMenu(mw.form.menuTools.menuAction(), menu)
 
     if hasSubmenu and (fullPath not in mw.customMenus):
-        submenu = QMenu('&' + submenuPath, mw)
+        submenu = QMenu("&" + submenuPath, mw)
         mw.customMenus[fullPath] = submenu
         mw.customMenus[menuPath].addMenu(submenu)
 
@@ -78,13 +76,13 @@ def addMenuItem(path, text, function, keys=None):
 
     action.triggered.connect(function)
 
-    if path == 'File':
+    if path == "File":
         mw.form.menuCol.addAction(action)
-    elif path == 'Edit':
+    elif path == "Edit":
         mw.form.menuEdit.addAction(action)
-    elif path == 'Tools':
+    elif path == "Tools":
         mw.form.menuTools.addAction(action)
-    elif path == 'Help':
+    elif path == "Help":
         mw.form.menuHelp.addAction(action)
     else:
         addMenu(path)
@@ -137,28 +135,28 @@ def updateModificationTime(path):
 
 def fixImages(html):
     if not html:
-        return ''
-    soup = BeautifulSoup(html, 'html.parser')
-    for img in soup.find_all('img'):
-        img['src'] = os.path.basename(unquote(img['src']))
+        return ""
+    soup = BeautifulSoup(html, "html.parser")
+    for img in soup.find_all("img"):
+        img["src"] = os.path.basename(unquote(img["src"]))
     return str(soup)
 
 
 def loadFile(fileDir, filename):
     moduleDir, _ = os.path.split(__file__)
     path = os.path.join(moduleDir, fileDir, filename)
-    with open(path, encoding='utf-8') as f:
+    with open(path, encoding="utf-8") as f:
         return f.read()
 
 
 def getColorList():
     moduleDir, _ = os.path.split(__file__)
-    colorsFilePath = os.path.join(moduleDir, 'data', 'colors.u8')
-    with open(colorsFilePath, encoding='utf-8') as colorsFile:
+    colorsFilePath = os.path.join(moduleDir, "data", "colors.u8")
+    with open(colorsFilePath, encoding="utf-8") as colorsFile:
         return [line.strip() for line in colorsFile]
 
 
 def showBrowser(nid):
-    browser = dialogs.open('Browser', mw)
-    browser.form.searchEdit.lineEdit().setText('nid:' + str(nid))
+    browser = dialogs.open("Browser", mw)
+    browser.form.searchEdit.lineEdit().setText("nid:" + str(nid))
     browser.onSearchActivated()

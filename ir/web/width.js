@@ -14,9 +14,11 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-if (screen.width > {maxWidth}) {{
-    var styleSheet = document.styleSheets[0];
-    styleSheet.insertRule(
-        "div {{ width: {maxWidth}px; margin: 20px auto }}", 0
-    );
-}}
+if (screen.width > { maxWidth }) {
+    {
+        var styleSheet = document.styleSheets[0];
+        styleSheet.insertRule(
+            "div {{ width: {maxWidth}px; margin: 20px auto }}", 0
+        );
+    }
+}
