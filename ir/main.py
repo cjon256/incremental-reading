@@ -117,7 +117,7 @@ class ReadingManager:
     def add_ir_answer_buttons(self):
         for button, fenc in self.button_shortcuts:
             mw.stateShortcuts += mw.applyShortcuts([(button, fenc)])
-        tooltip('Added IR answer buttons')
+        tooltip("Added IR answer buttons")
 
     def onPrepareQA(self, html, card, context):
         if isIrCard(card):
@@ -214,15 +214,17 @@ class ReadingManager:
 
 def answerButtonList(self, _old):
     if isIrCard(self.card):
-        if mw.readingManager.settings['prioEnabled']:
-            return ((1, _('Next')),)
+        if mw.readingManager.settings["prioEnabled"]:
+            return ((1, _("Next")),)
         mw.readingManager.add_ir_answer_buttons()
-        return ((1, _('Soon')),
-                (2, _('Soonish')),
-                (3, _('Later')),
-                (4, _('Much Later')),
-                (6, _('6 Custom')),
-                (8, _('8 Never')))
+        return (
+            (1, _("Soon")),
+            (2, _("Soonish")),
+            (3, _("Later")),
+            (4, _("Much Later")),
+            (6, _("6 Custom")),
+            (8, _("8 Never")),
+        )
     return _old(self)
 
 
