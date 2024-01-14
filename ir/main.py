@@ -51,6 +51,10 @@ class ReadingManager:
         addHook("showAnswer", self.onShowAnswer)
         addHook("reviewCleanup", self.onReviewCleanup)
         self.qshortcuts = []
+        self.button_shortcuts = [
+            ("8", lambda: mw.reviewer._answerCard(8)),
+            ("6", lambda: mw.reviewer._answerCard(6)),
+        ]
 
     def onProfileLoaded(self):
         self.settings = SettingsManager()
@@ -110,6 +114,11 @@ class ReadingManager:
 
         self.settings.loadMenuItems()
 
+    def add_ir_answer_buttons(self):
+        for button, fenc in self.button_shortcuts:
+            mw.stateShortcuts += mw.applyShortcuts([(button, fenc)])
+        tooltip('Added IR answer buttons')
+
     def onPrepareQA(self, html, card, context):
         if isIrCard(card):
             if self.settings["prioEnabled"]:
@@ -129,6 +138,7 @@ class ReadingManager:
                 # add some extra shortcuts good for reading
                 self.qshortcuts = mw.applyShortcuts(self.shortcuts)
                 mw.stateShortcuts += self.qshortcuts
+                self.add_ir_answer_buttons()
             # remove any existing shortcuts in answerShortcuts
             for shortcut in activeAnswerShortcuts:
                 if shortcut:
@@ -204,20 +214,15 @@ class ReadingManager:
 
 def answerButtonList(self, _old):
     if isIrCard(self.card):
-        if mw.readingManager.settings["prioEnabled"]:
-            return ((1, _("Next")),)
-        shortcuts = []
-        shortcuts.append(("8", lambda: mw.reviewer._answerCard(8)))
-        shortcuts.append(("6", lambda: mw.reviewer._answerCard(6)))
-        mw.stateShortcuts += mw.applyShortcuts(shortcuts)
-        return (
-            (1, _("Soon")),
-            (2, _("Soonish")),
-            (3, _("Later")),
-            (4, _("Much Later")),
-            (6, _("6 Custom")),
-            (8, _("8 Never")),
-        )
+        if mw.readingManager.settings['prioEnabled']:
+            return ((1, _('Next')),)
+        mw.readingManager.add_ir_answer_buttons()
+        return ((1, _('Soon')),
+                (2, _('Soonish')),
+                (3, _('Later')),
+                (4, _('Much Later')),
+                (6, _('6 Custom')),
+                (8, _('8 Never')))
     return _old(self)
 
 
