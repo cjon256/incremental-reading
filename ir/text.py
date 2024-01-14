@@ -41,6 +41,7 @@ class TextManager:
 
         script = "highlight('%s', '%s')" % (bgColor, textColor)
         mw.web.eval(script)
+        mw.readingManager.viewManager.saveScroll()
         self.save()
 
     def format(self, style):
@@ -67,6 +68,7 @@ class TextManager:
             mw.web.evalWithCallback(
                 "getHtmlText()", lambda text: self.create(text, settings)
             )
+        mw.readingManager.viewManager.saveScroll()
 
     def create(self, text, settings):
         currentCard = mw.reviewer.card
