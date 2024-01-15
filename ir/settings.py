@@ -104,7 +104,10 @@ class SettingsManager:
         if self.settings[key] != value and key not in self.settings["modified"]:
             self.settings["modified"].append(key)
 
-        self.settings[key] = value
+        try:
+            self.settings[key] = value
+        except KeyError:
+            self.settings[key] = SettingsManager.defaults[key]
 
     def __getitem__(self, key):
         return self.settings[key]
