@@ -239,9 +239,9 @@ class Scheduler:
             randomize = self.settings["soonRandom"]
             method = self.settings["soonMethod"]
         elif ease == SCHEDULE_SOONISH:  # 2
-            value = self.settings["soonValue"] * 2
-            randomize = True
-            method = self.settings["soonMethod"]
+            value = self.settings["soonishValue"]
+            randomize = self.settings["soonishRandom"]
+            method = self.settings["soonishMethod"]
         elif ease == SCHEDULE_LATER:  # 3
             value = self.settings["laterValue"]
             randomize = self.settings["laterRandom"]
@@ -294,8 +294,7 @@ class Scheduler:
         cardInfo = []
 
         for cid, nid in mw.col.db.execute(
-            f"select id, nid from cards where did = ? and queue <> {
-                QUEUE_TYPE_SUSPENDED}",
+            f"select id, nid from cards where did = ? and queue <> {QUEUE_TYPE_SUSPENDED}",
             did,
         ):
             note = mw.col.getNote(nid)
