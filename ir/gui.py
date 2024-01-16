@@ -76,6 +76,9 @@ class SettingsDialog:
     laterValueEditBox = None
     limitAllCardsButton = None
     limitIrCardsButton = None
+    muchLaterPercentButton = None
+    muchLaterRandomCheckBox = None
+    muchLaterValueEditBox = None
     lineStepSpinBox = None
     noteTypeComboBox = None
     organizerFormatEditBox = None
@@ -167,6 +170,7 @@ class SettingsDialog:
         self.settings["soonRandom"] = self.soonRandomCheckBox.isChecked()
         self.settings["soonishRandom"] = self.soonishRandomCheckBox.isChecked()
         self.settings["laterRandom"] = self.laterRandomCheckBox.isChecked()
+        self.settings["muchLaterRandom"] = self.muchLaterRandomCheckBox.isChecked()
         self.settings["extractRandom"] = self.extractRandomCheckBox.isChecked()
 
         if self.extractDeckComboBox.currentText() == "[Current Deck]":
@@ -178,6 +182,7 @@ class SettingsDialog:
             self.settings["soonValue"] = int(self.soonValueEditBox.text())
             self.settings["soonishValue"] = int(self.soonishValueEditBox.text())
             self.settings["laterValue"] = int(self.laterValueEditBox.text())
+            self.settings["muchLaterValue"] = int(self.muchLaterValueEditBox.text())
             self.settings["extractValue"] = int(self.extractValueEditBox.text())
             self.settings["maxWidth"] = int(self.widthEditBox.text())
         except ValueError:
@@ -207,6 +212,11 @@ class SettingsDialog:
             self.settings["laterMethod"] = "percent"
         else:
             self.settings["laterMethod"] = "count"
+
+        if self.muchLaterPercentButton.isChecked():
+            self.settings["muchLaterMethod"] = "percent"
+        else:
+            self.settings["muchLaterMethod"] = "count"
 
         if self.extractPercentButton.isChecked():
             self.settings["extractMethod"] = "percent"
@@ -622,6 +632,7 @@ class SettingsDialog:
         soonLabel = QLabel("Soon Button")
         soonishLabel = QLabel("Soonish Button")
         laterLabel = QLabel("Later Button")
+        muchLaterLabel = QLabel("Much Later Button")
         extractLabel = QLabel("Extracts")
 
         self.soonPercentButton = QRadioButton("Percent")
@@ -630,12 +641,15 @@ class SettingsDialog:
         soonishPositionButton = QRadioButton("Position")
         self.laterPercentButton = QRadioButton("Percent")
         laterPositionButton = QRadioButton("Position")
+        self.muchLaterPercentButton = QRadioButton("Percent")
+        muchLaterPositionButton = QRadioButton("Position")
         self.extractPercentButton = QRadioButton("Percent")
         extractPositionButton = QRadioButton("Position")
 
         self.soonRandomCheckBox = QCheckBox("Randomize")
         self.soonishRandomCheckBox = QCheckBox("Randomize")
         self.laterRandomCheckBox = QCheckBox("Randomize")
+        self.muchLaterRandomCheckBox = QCheckBox("Randomize")
         self.extractRandomCheckBox = QCheckBox("Randomize")
 
         self.soonValueEditBox = QLineEdit()
@@ -644,6 +658,8 @@ class SettingsDialog:
         self.soonishValueEditBox.setFixedWidth(100)
         self.laterValueEditBox = QLineEdit()
         self.laterValueEditBox.setFixedWidth(100)
+        self.muchLaterValueEditBox = QLineEdit()
+        self.muchLaterValueEditBox.setFixedWidth(100)
         self.extractValueEditBox = QLineEdit()
         self.extractValueEditBox.setFixedWidth(100)
 
@@ -667,6 +683,11 @@ class SettingsDialog:
         else:
             laterPositionButton.setChecked(True)
 
+        if self.settings["muchLaterMethod"] == "percent":
+            self.muchLaterPercentButton.setChecked(True)
+        else:
+            muchLaterPositionButton.setChecked(True)
+
         if self.settings["extractMethod"] == "percent":
             self.extractPercentButton.setChecked(True)
         else:
@@ -681,12 +702,16 @@ class SettingsDialog:
         if self.settings["laterRandom"]:
             self.laterRandomCheckBox.setChecked(True)
 
+        if self.settings["muchLaterRandom"]:
+            self.muchLaterRandomCheckBox.setChecked(True)
+
         if self.settings["extractRandom"]:
             self.extractRandomCheckBox.setChecked(True)
 
         self.soonValueEditBox.setText(str(self.settings["soonValue"]))
         self.soonishValueEditBox.setText(str(self.settings["soonishValue"]))
         self.laterValueEditBox.setText(str(self.settings["laterValue"]))
+        self.muchLaterValueEditBox.setText(str(self.settings["muchLaterValue"]))
         self.extractValueEditBox.setText(str(self.settings["extractValue"]))
 
         formatLabel = QLabel("Organizer Format")
@@ -729,6 +754,14 @@ class SettingsDialog:
         laterLayout.addWidget(laterPositionButton)
         laterLayout.addWidget(self.laterRandomCheckBox)
 
+        muchLaterLayout = QHBoxLayout()
+        muchLaterLayout.addWidget(muchLaterLabel)
+        muchLaterLayout.addStretch()
+        muchLaterLayout.addWidget(self.muchLaterValueEditBox)
+        muchLaterLayout.addWidget(self.muchLaterPercentButton)
+        muchLaterLayout.addWidget(muchLaterPositionButton)
+        muchLaterLayout.addWidget(self.muchLaterRandomCheckBox)
+
         extractLayout = QHBoxLayout()
         extractLayout.addWidget(extractLabel)
         extractLayout.addStretch()
@@ -753,6 +786,10 @@ class SettingsDialog:
         laterButtonGroup.addButton(self.laterPercentButton)
         laterButtonGroup.addButton(laterPositionButton)
 
+        muchLaterButtonGroup = QButtonGroup(muchLaterLayout)
+        muchLaterButtonGroup.addButton(self.muchLaterPercentButton)
+        muchLaterButtonGroup.addButton(muchLaterPositionButton)
+
         extractButtonGroup = QButtonGroup(extractLayout)
         extractButtonGroup.addButton(self.extractPercentButton)
         extractButtonGroup.addButton(extractPositionButton)
@@ -766,6 +803,7 @@ class SettingsDialog:
         layout.addLayout(soonLayout)
         layout.addLayout(soonishLayout)
         layout.addLayout(laterLayout)
+        layout.addLayout(muchLaterLayout)
         layout.addLayout(extractLayout)
         layout.addLayout(formatLayout)
         layout.addStretch()

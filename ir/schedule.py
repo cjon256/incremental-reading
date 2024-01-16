@@ -247,9 +247,9 @@ class Scheduler:
             randomize = self.settings["laterRandom"]
             method = self.settings["laterMethod"]
         elif ease == SCHEDULE_MUCHLATER:  # 4
-            value = self.settings["laterValue"] * 2
-            randomize = True
-            method = self.settings["laterMethod"]
+            value = self.settings["muchLaterValue"]
+            randomize = self.settings["muchLaterRandom"]
+            method = self.settings["muchLaterMethod"]
         elif ease == SCHEDULE_NEVER:  # 5 (shortcut does not work)
             value = 90
             randomize = True
