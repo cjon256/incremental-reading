@@ -16,6 +16,8 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+# pylint: disable=import-error,invalid-name,no-name-in-module,no-member,protected-access,missing-docstring
+
 from functools import partial
 
 import sip
@@ -151,7 +153,7 @@ class ReadingManager:
                         [
                             (
                                 shortcut,
-                                lambda: mw.reviewer._answerCard(int(shortcut)),
+                                lambda s=shortcut: mw.reviewer._answerCard(int(s)),
                             )
                         ]
                     )
@@ -243,11 +245,11 @@ def buttonTime(self, i, _old):
     return _old(self, i)
 
 
-def onBrowserClosed(self):
+def onBrowserClosed(_):
     try:
         mw.readingManager.scheduler._updateListItems()
-    except Exception as e:
-        tooltip(f"onBrowserClosed exception {e}")
+    # pylint: disable-next=catching-non-exception
+    except onBrowserClosed:
         return
 
 
