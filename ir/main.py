@@ -246,11 +246,7 @@ def buttonTime(self, i, _old):
 
 
 def onBrowserClosed(_):
-    try:
-        mw.readingManager.scheduler._updateListItems()
-    # pylint: disable-next=catching-non-exception
-    except onBrowserClosed:
-        return
+    mw.readingManager.scheduler._updateListItems()
 
 
 Reviewer._answerButtonList = wrap(

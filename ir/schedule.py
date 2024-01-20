@@ -121,6 +121,8 @@ class Scheduler:
             self.reorder(cids)
 
     def _updateListItems(self):
+        if self.cardListWidget is None:
+            return
         cardInfo = self._getCardInfo(self.did)
         self.cardListWidget.clear()
         posWidth = len(str(len(cardInfo) + 1))
