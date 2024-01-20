@@ -17,6 +17,8 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+# pylint: disable=import-error,invalid-name,no-name-in-module,no-member,protected-access,missing-docstring
+
 from random import gauss, shuffle
 from re import sub
 
@@ -25,9 +27,16 @@ from anki.utils import stripHTML
 from aqt import mw
 from aqt.utils import showInfo, tooltip
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QAbstractItemView, QDialog, QDialogButtonBox,
-                             QHBoxLayout, QListWidget, QListWidgetItem,
-                             QPushButton, QVBoxLayout)
+from PyQt5.QtWidgets import (
+    QAbstractItemView,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QVBoxLayout,
+)
 
 from .util import showBrowser
 
@@ -60,8 +69,7 @@ class Scheduler:
         layout = QVBoxLayout()
         self.cardListWidget = QListWidget()
         self.cardListWidget.setAlternatingRowColors(True)
-        self.cardListWidget.setSelectionMode(
-            QAbstractItemView.ExtendedSelection)
+        self.cardListWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.cardListWidget.setWordWrap(True)
         self.cardListWidget.itemDoubleClicked.connect(
             lambda: showBrowser(
@@ -90,8 +98,7 @@ class Scheduler:
         controlsLayout.addStretch()
         controlsLayout.addWidget(randomizeButton)
 
-        buttonBox = QDialogButtonBox(
-            QDialogButtonBox.Close | QDialogButtonBox.Save)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.Close | QDialogButtonBox.Save)
         buttonBox.accepted.connect(dialog.accept)
         buttonBox.rejected.connect(dialog.reject)
         buttonBox.setOrientation(Qt.Horizontal)
@@ -124,8 +131,7 @@ class Scheduler:
                 info = str(i).zfill(posWidth)
             title = sub(r"\s+", " ", stripHTML(card["title"]))
             try:
-                text = self.settings["organizerFormat"].format(
-                    info=info, title=title)
+                text = self.settings["organizerFormat"].format(info=info, title=title)
             except KeyError as keyerror:
                 tooltip(f"KeyError in _updateListItems: {keyerror}")
                 text = str(title)
@@ -211,8 +217,7 @@ class Scheduler:
             for item in allItems:
                 priority = item.data(Qt.UserRole)["priority"]
                 if priority != "":
-                    item.contNewPos = gauss(
-                        maxPrio - int(priority), maxPrio / 20)
+                    item.contNewPos = gauss(maxPrio - int(priority), maxPrio / 20)
                 else:
                     item.contNewPos = float("inf")
             allItems.sort(key=lambda item: item.contNewPos)
@@ -283,12 +288,38 @@ class Scheduler:
         cids = [c["id"] for c in self._getCardInfo(card.did)]
         mw.col.sched.forgetCards(cids)
         cids.remove(card.id)
-        newOrder = cids[: newPos - 1] + [card.id] + cids[newPos - 1:]
+        newOrder = cids[: newPos - 1] + [card.id] + cids[newPos - 1 :]
         mw.col.sched.sortCards(newOrder)
 
     def reorder(self, cids):
         mw.col.sched.forgetCards(cids)
         mw.col.sched.sortCards(cids)
+
+    def get_button_interval(self, ease):
+        # XXX Hardcoded values, maybe allow setting in gui?
+        # withot knowing how many cards the user reviws per day
+        # and how often he presses each button, it is hard to
+        # come up with good values
+        # Q: Could I get that info fram stats and deck options?
+        if ease == SCHEDULE_SOON:  # 1
+            return "1d"
+        if ease == SCHEDULE_SOONISH:  # 2
+            return "2-4d"
+        if ease == SCHEDULE_LATER:  # 3
+            return "8-12d"
+        if ease == SCHEDULE_MUCHLATER:  # 4
+            return "~20d"
+        if ease == SCHEDULE_NEVER:  # 5 (shortcut does not work)
+            return "Never"
+        if ease == SCHEDULE_CUSTOM:  # 6 (shortcut also does not work)
+            return "Custom"
+        return "&nbsp;"
+
+    def buttonTime(self, i):
+        if not mw.col.conf["estTimes"]:
+            return "<div class=spacer></div>"
+        txt = self.get_button_interval(i)
+        return f"<span class=nobold>{txt}</span><br>"
 
     def _getCardInfo(self, did):
         cardInfo = []

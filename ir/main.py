@@ -241,7 +241,7 @@ def answerCard(self, ease, _old):
 
 def buttonTime(self, i, _old):
     if isIrCard(mw.reviewer.card):
-        return "<div class=spacer></div>"
+        return mw.readingManager.scheduler.buttonTime(i)
     return _old(self, i)
 
 
