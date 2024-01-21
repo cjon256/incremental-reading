@@ -26,7 +26,6 @@ from anki.lang import _
 from aqt import mw
 from aqt.browser import Browser
 from aqt.reviewer import Reviewer
-from aqt.utils import tooltip
 
 from .about import showAbout
 from .gui import SettingsDialog
@@ -119,7 +118,6 @@ class ReadingManager:
     def add_ir_answer_buttons(self):
         for button, fenc in self.button_shortcuts:
             mw.stateShortcuts += mw.applyShortcuts([(button, fenc)])
-        tooltip("Added IR answer buttons")
 
     def onPrepareQA(self, html, card, context):
         if isIrCard(card):
