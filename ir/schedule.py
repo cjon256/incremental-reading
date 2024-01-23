@@ -121,6 +121,20 @@ class Scheduler:
             self.reorder(cids)
 
     def _updateListItems(self):
+        # Checking if CardListWidget is None is a workaround for the following error:
+        # Which unfortunately does not always work because the underlying C++ object
+        # is the thing that gets deleted, not the python object.
+        #         Traceback (most recent call last):
+        #   File "aqt/webview.py", line 493, in handler
+        #   File "aqt/editor.py", line 483, in <lambda>
+        #   File "</Applications/Anki.app/Contents/MacOS/decorator.pyc:decorator-gen-70>", line 2, in _closeWindow
+        #   File "anki/hooks.py", line 638, in decorator_wrapper
+        #   File "anki/hooks.py", line 630, in repl
+        #   File "/Users/cjon/Library/Application Support/Anki2/addons21/ir/main.py", line 250, in onBrowserClosed
+        #     Reviewer._answerButtonList = wrap(
+        #   File "/Users/cjon/Library/Application Support/Anki2/addons21/ir/schedule.py", line 127, in _updateListItems
+        #     self.cardListWidget.clear()
+        # RuntimeError: wrapped C/C++ object of type QListWidget has been deleted
         if self.cardListWidget is None:
             return
         cardInfo = self._getCardInfo(self.did)

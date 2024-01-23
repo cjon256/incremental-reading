@@ -244,7 +244,23 @@ def buttonTime(self, i, _old):
 
 
 def onBrowserClosed(_):
-    mw.readingManager.scheduler._updateListItems()
+    try:
+        mw.readingManager.scheduler._updateListItems()
+    except RuntimeError:
+        # Catches this error. I think the browser is deleting the cardListWidget
+        # before the hook is called in some cases.
+        #         Traceback (most recent call last):
+        #   File "aqt/webview.py", line 493, in handler
+        #   File "aqt/editor.py", line 483, in <lambda>
+        #   File "</Applications/Anki.app/Contents/MacOS/decorator.pyc:decorator-gen-70>", line 2, in _closeWindow
+        #   File "anki/hooks.py", line 638, in decorator_wrapper
+        #   File "anki/hooks.py", line 630, in repl
+        #   File "/Users/cjon/Library/Application Support/Anki2/addons21/ir/main.py", line 250, in onBrowserClosed
+        #     Reviewer._answerButtonList = wrap(
+        #   File "/Users/cjon/Library/Application Support/Anki2/addons21/ir/schedule.py", line 127, in _updateListItems
+        #     self.cardListWidget.clear()
+        # RuntimeError: wrapped C/C++ object of type QListWidget has been deleted
+        return
 
 
 Reviewer._answerButtonList = wrap(
